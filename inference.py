@@ -23,7 +23,6 @@ def ctc_greedy_decoder(logits, vocab):
 
     # Get the most probable token indices
     pred_indices = torch.argmax(probs, dim=-1)
-    print(pred_indices)
 
     decoded_sequences = []
     for indices in pred_indices:
@@ -39,13 +38,13 @@ def ctc_greedy_decoder(logits, vocab):
 
     return decoded_sequences
 
-def load_model(config, args):
+def load_model(config, ckpt_path):
     # Load model
 
     model = XeusForCTC(config)
 
     # Load checkpoint
-    with safe_open(f"{args.ckpt_path}/model.safetensors", framework="pt") as f:
+    with safe_open(f"{ckpt_path}/model.safetensors", framework="pt") as f:
         state_dict = {}
         for key in f.keys():
             state_dict[key] = f.get_tensor(key)
@@ -121,7 +120,7 @@ def main(args):
 
     config = Config(dummy_config)
     # Load the model
-    model = load_model(config, args)
+    model = load_model(config, args.ckpt_path)
     audio, sr = read_and_resample_wav(args.audio, target_sr=16000)
 
     prediction = perform_inference(model, audio, vocab_dict)

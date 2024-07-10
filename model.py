@@ -5,7 +5,6 @@ from argparse import Namespace
 import torch
 import os
 from typing import Union, Optional
-from transformers import Wav2Vec2ForCTC, HubertForCTC
 def dict_to_namespace(config_dict):
     return Namespace(**config_dict)
 
@@ -84,7 +83,7 @@ class XeusForCTC(nn.Module):
             if labels.max() >= self.config.vocab_size:
                 raise ValueError(f"Label values must be <= vocab_size: {self.config.vocab_size}")
 
-            # assuming that padded tokens are filled with -100
+            # assuming that padded tokens are filled with -1
             # when not being attended to
             labels_mask = labels >= 0
             target_lengths = labels_mask.sum(-1)

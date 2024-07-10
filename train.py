@@ -1,14 +1,10 @@
 import torch
-from torch import nn
-from sconf import Config
 import os
 from os.path import basename
 from pathlib import Path
 import datetime
-from datasets import load_dataset, load_metric, load_from_disk, DatasetDict, Audio, Dataset, concatenate_datasets
-import numpy as np
+from datasets import load_dataset, Audio, Dataset, concatenate_datasets
 import shutil
-from espnet2.tasks.ssl import SSLTask
 from functools import partial
 import re
 from accelerate import Accelerator
@@ -354,6 +350,7 @@ while True:
             outputs = model(wavs, labels, wav_lengths)
             loss, logits, _ = outputs
             accelerator.backward(loss)
+            accelerator.clip_grad_norm_(model.parent.parameters(), config.max_grad_norm)
             optimizer.step()
             scheduler.step()
             optimizer.zero_grad()
@@ -369,23 +366,22 @@ while True:
         if global_step >= config.total_steps:
             break
 
-        # if global_step % config.eval_step == 0 and global_step != 0:
-        #     model.eval()
-        #     losses = []
-        #     for step, batch in enumerate(eval_dataloader):
-        #         if step > config.validation_steps:
-        #             break
-        #         wavs, labels, wav_lengths = batch
-        #         with torch.no_grad():
-        #             outputs = model(wavs, labels, wav_lengths)
-        #         loss, _, _ = outputs
-        #         losses.append(loss)
-        #
-        #     # eval_loss = torch.mean(torch.cat(losses))
-        #     eval_loss = torch.mean(losses)
-        #     if accelerator.is_main_process:
-        #         print(f"Step {step + 1}, Eval Loss: {eval_loss}")
-        #     model.train()
+        if global_step % config.eval_step == 0 and global_step != 0:
+            model.eval()
+            losses = []
+            for step, batch in enumerate(eval_dataloader):
+                if step > config.validation_steps:
+                    break
+                wavs, labels, wav_lengths = batch
+                with torch.no_grad():
+                    outputs = model(wavs, labels, wav_lengths)
+                loss, _, _ = outputs
+                losses.append(accelerator.gather(loss))
+
+            eval_loss = torch.mean(torch.cat(losses))
+            if accelerator.is_main_process:
+                print(f"Step {step + 1}, Eval Loss: {eval_loss}")
+            model.train()
 
     if global_step >= config.total_steps:
         break

@@ -1,0 +1,15 @@
+datasets
+accelerate
+sconf
+transformers
+librosa
+pydub
+soundfile
+typing
+safetensors
+soundfile
+scipy
+evaluate
+tqdm
+typing
+dataclasses

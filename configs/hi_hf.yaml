@@ -6,6 +6,24 @@ train_datasets:
       - "audio"
       - "sentence"
 
+  - dataset: "shields/whisper-small-hindi"
+    split: "train+test"
+    input_fields:
+      - "audio"
+      - "sentence"
+
+  - dataset: "damerajee/Hindi-audio-speech"
+    split: "train"
+    input_fields:
+      - "audio"
+      - "raw_text"
+
+  - dataset: "skywalker290/Hindi_TTS_M"
+    split: "train"
+    input_fields:
+      - "audio"
+      - "raw_text"
+
 
 eval_datasets:
   - dataset: "mozilla-foundation/common_voice_16_0"
@@ -27,19 +45,20 @@ pretrained_model_path: "./XEUS/model/xeus_checkpoint.pth"
 train_batch_size: 4
 eval_batch_size: 4
 num_workers: 8
+max_grad_norm: 2.0
 debug: False
 result_path: "results"
 exp_name: "hindi"
 sampling_rate: 16000
-warmup_steps: 100
-learning_rate: 1e-4
+warmup_steps: 1000
+learning_rate: 3e-4
 save_steps: 1000
 eval_step: 100
-validation_steps: 20
+validation_steps: 10
 logging_steps: 10
 save_total_limit: 2
 push_to_hub: False
 gradient_checkpointing: True
-total_steps: 5000
+total_steps: 10000
 gradient_accumulation_steps: 4
 ckpt_path: ""
