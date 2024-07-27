@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 from transformers import HfArgumentParser, AdamW, get_cosine_schedule_with_warmup
 from tqdm import tqdm
 from model import XeusForCTC
+from sconf import Config
 
 
 
@@ -190,29 +191,9 @@ def text_to_char_sequence(vocab, text_array):
     return sequences
 
 
-def create_collate_fn(vocab_dict):
-    def collate_fn(batch):
-        # Separate audio and text data
-        labels = text_to_char_sequence(vocab_dict, batch["sentence"])
-        audio = batch["audio"]
-
-        wavs = [item["array"] for item in audio]
-
-        wav_lengths = torch.LongTensor([len(wav) for wav in wavs])
-        labels_length = torch.LongTensor([len(labels) for labels in labels])
-
-        labels = [torch.LongTensor(label) for label in labels]
-
-        wavs = pad_sequence(wavs, batch_first=True)
-        labels = pad_sequence(labels, batch_first=True)
-
-        return wavs, labels, wav_lengths
-
-    return collate_fn
 
 
 
-from sconf import Config
 
 
 def create_collate_fn(vocab_dict):
@@ -350,7 +331,7 @@ while True:
             outputs = model(wavs, labels, wav_lengths)
             loss, logits, _ = outputs
             accelerator.backward(loss)
-            accelerator.clip_grad_norm_(model.parent.parameters(), config.max_grad_norm)
+            accelerator.clip_grad_norm_(model.parameters(), config.max_grad_norm)
             optimizer.step()
             scheduler.step()
             optimizer.zero_grad()
@@ -376,9 +357,11 @@ while True:
                 with torch.no_grad():
                     outputs = model(wavs, labels, wav_lengths)
                 loss, _, _ = outputs
-                losses.append(accelerator.gather(loss))
+                # losses.append(accelerator.gather(loss))
+                losses.append(loss.item())
 
-            eval_loss = torch.mean(torch.cat(losses))
+            # eval_loss = torch.mean(torch.cat(losses))
+            eval_loss = torch.tensor(losses).mean()
             if accelerator.is_main_process:
                 print(f"Step {step + 1}, Eval Loss: {eval_loss}")
             model.train()
