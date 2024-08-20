@@ -22,10 +22,10 @@ class XeusForCTC(nn.Module):
 
         self.xeus_model = SSLTask.build_model(xeus_train_args)
 
-        if train:
-            self.xeus_model.train()
+        for layer in self.xeus_model.decoder.decoders:
+            layer.use_flash_attn = True
 
-        if train and os.path.exists(config.pretrained_model_path):
+        if os.path.exists(config.pretrained_model_path):
             self.xeus_model.load_state_dict(
                 torch.load(config.pretrained_model_path), strict=True
             )
