@@ -52,7 +52,7 @@ exp_name: "hindi"
 sampling_rate: 16000
 warmup_steps: 1000
 learning_rate: 3e-4
-save_steps: 1000
+save_steps: 500
 eval_step: 100
 validation_steps: 10
 logging_steps: 10
