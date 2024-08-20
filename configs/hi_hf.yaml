@@ -42,6 +42,7 @@ preprocessing:
 
 
 pretrained_model_path: "./XEUS/model/xeus_checkpoint.pth"
+use_flash_attn: False
 train_batch_size: 4
 eval_batch_size: 4
 num_workers: 8

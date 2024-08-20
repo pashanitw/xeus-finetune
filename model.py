@@ -8,7 +8,7 @@ from sconf import Config
 
 
 class XeusForCTC(nn.Module):
-    def __init__(self, config, train=False):
+    def __init__(self, config):
         super().__init__()
         self.config = config
 
@@ -22,8 +22,9 @@ class XeusForCTC(nn.Module):
 
         self.xeus_model = SSLTask.build_model(xeus_train_args)
 
-        for layer in self.xeus_model.decoder.decoders:
-            layer.use_flash_attn = True
+        if config.use_flash_attn:
+            for layer in self.xeus_model.decoder.decoders:
+                layer.use_flash_attn = True
 
         if os.path.exists(config.pretrained_model_path):
             self.xeus_model.load_state_dict(
@@ -71,6 +72,7 @@ class XeusForCTC(nn.Module):
         labels: Optional[torch.Tensor] = None,
         wav_lengths: Optional[torch.Tensor] = None,
     ):
+
         hidden_states = self.xeus_model.encode(
             wavs, wav_lengths, use_mask=False, use_final_output=False
         )[0][-1]
